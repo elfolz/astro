@@ -75,6 +75,7 @@ function initCamera() {
 	.then(stream => {
 		video = document.querySelector('video')
 		video.srcObject = stream
+		video.loop = true
 		video.play()
 		const texture = new THREE.VideoTexture(video)
 		let sphere = new THREE.Mesh(
@@ -82,7 +83,7 @@ function initCamera() {
 			new THREE.MeshBasicMaterial({map: texture, opacity: 0.5, transparent: true})
 		)
 		sphere.scale.set(0.38, 0.38, 0.25)
-		sphere.position.set(0.038, 1.19, 0.89)
+		sphere.position.set(0.038, 1.19, 0.9)
 		sphere.rotation.x = 0.35
 		sphere.rotation.y = -0.03
 		astro.getObjectByName('mixamorig_Head_06').attach(sphere)
