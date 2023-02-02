@@ -1,0 +1,11 @@
+{
+	"name": "Astro",
+	"version": "1.0.0",
+	"scripts": {
+		"serve": "http-server ./ -p 8090 -c-1 -g",
+		"ssl": "http-server ./ -p 8090 -c-1 -g -S -C ./cert/cert.crt -K ./cert/cert.key"
+	},
+	"devDependencies": {
+		"http-server": "^14.1.1"
+	}
+}

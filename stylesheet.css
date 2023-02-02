@@ -1,0 +1,42 @@
+* {
+	font-family: sans-serif;
+	box-sizing: border-box;
+	outline: none !important;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+	-webkit-tap-highlight-color: transparent;
+}
+:root {
+	--color-primary: #00cc99;
+	--color-accent: #9966cc;
+	--color-button: rgba(255,255,255,0.25);
+}
+img, svg {
+	-webkit-user-drag: none;
+	user-drag: none;
+}
+html {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	overflow: hidden;
+}
+body {
+	margin: 0;
+	padding-top: env(safe-area-inset-top, 0);
+	padding-bottom: env(safe-area-inset-bottom, 0);
+	background-size: cover;
+	width: 100vw;
+	height: 100vh;
+}
+body.loaded {
+	background: linear-gradient(#000, #000036, #4b0082, #000);
+}
+video {
+	display: none;
+	width: 300;
+	height: 200px;
+}
