@@ -137,4 +137,8 @@ document.onclick = () => {
 	initCamera()
 	initAudio()
 }
+document.onvisibilitychange = () => {
+	if (document.hidden) audio.pause()
+	else audio.play()
+}
 document.body.appendChild(renderer.domElement)
