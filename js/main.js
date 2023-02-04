@@ -70,7 +70,10 @@ function initCamera() {
 	if (videoStarted) return
 	navigator.mediaDevices.getUserMedia({
 		audio: false,
-		video: {facingMode: 'user'}
+		video: {
+			facingMode: 'user',
+			aspectRatio: 1/1
+		}
 	})
 	.then(stream => {
 		video = document.querySelector('video')
