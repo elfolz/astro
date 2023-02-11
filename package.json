@@ -3,7 +3,9 @@
 	"version": "1.0.0",
 	"scripts": {
 		"serve": "http-server ./ -p 8090 -c-1 -g",
-		"ssl": "http-server ./ -p 8090 -c-1 -g -S -C ./cert/cert.crt -K ./cert/cert.key"
+		"ssl": "http-server ./ -p 8090 -c-1 -g -S -C ./cert/cert.crt -K ./cert/cert.key",
+		"adb:c": "adb connect 192.168.0.133:41437",
+		"adb:d": "adb disconnect 192.168.0.133:41437"
 	},
 	"devDependencies": {
 		"http-server": "^14.1.1"

@@ -35,8 +35,28 @@ body {
 body.loaded {
 	background: linear-gradient(#000, #000036, #4b0082, #000);
 }
+button {
+	position: absolute;
+	left: 50%;
+	bottom: calc(env(safe-area-inset-bottom, 0) + 12px);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: none;
+	padding: 12px;
+	border-radius: 50%;
+	background-color: #121212;
+	transform: translateX(-50%);
+	aspect-ratio: 1/1;
+	cursor: pointer;
+	box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.5);
+}
 video {
 	display: none;
 	width: 300;
 	height: 200px;
+}
+#picture {
+	position: absolute;
+	display: none;
 }
