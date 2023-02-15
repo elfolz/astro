@@ -88,7 +88,7 @@ function initCamera() {
 			new THREE.MeshBasicMaterial({map: texture, opacity: 0.5, transparent: true})
 		)
 		sphere.scale.set(0.38, 0.38, 0.25)
-		sphere.position.set(0.06, 1.19, 0.9)
+		sphere.position.set(0.04, 1.2, 0.9)
 		sphere.rotation.x = 0.35
 		sphere.rotation.y = -0.03
 		astro.getObjectByName('mixamorig_Head_06').attach(sphere)
