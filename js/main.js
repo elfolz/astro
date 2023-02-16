@@ -14,6 +14,9 @@ const clock = new THREE.Clock()
 const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true, preserveDrawingBuffer: true})
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth /window.innerHeight, 0.1, 1000)
 const hemisphereLight = new THREE.HemisphereLight(0xddeeff, 0x000000, 0.25)
+const dirLight1 = new THREE.DirectionalLight(0xFFFFFF, 2)
+const dirLight2 = new THREE.DirectionalLight(0xFFFFFF, 2)
+const dirLight3 = new THREE.DirectionalLight(0xFFFFFF, 2)
 const gltfLoader = new GLTFLoader()
 const scene = new THREE.Scene()
 const imageTextureLoader = new THREE.TextureLoader()
@@ -42,6 +45,12 @@ renderer.setClearColor(0x000000, 0)
 scene.add(hemisphereLight)
 controls.screenSpacePanning = true
 controls.enableZoom = false
+dirLight1.position.set(0, 0, 1)
+dirLight2.position.set(5, 1, 1)
+dirLight3.position.set(-5, 1, 1)
+scene.add(dirLight1)
+scene.add(dirLight2)
+scene.add(dirLight3)
 
 var clockDelta = 0
 var gameStarted = false
