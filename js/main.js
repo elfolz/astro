@@ -36,6 +36,7 @@ var progress = new Proxy({}, {
 scene.background = null
 renderer.outputEncoding = THREE.sRGBEncoding
 renderer.physicallyCorrectLights = true
+renderer.sortObjects = false
 renderer.setClearColor(0x000000, 0)
 scene.add(hemisphereLight)
 controls.screenSpacePanning = true
@@ -55,7 +56,11 @@ gltfLoader.load('/models/astro.glb',
 		astro = gltf.scene
 		astro.encoding = THREE.sRGBEncoding
 		astro.position.y -= 2.25
-		astro.traverse(el => {if (el.isMesh) el.castShadow = true})
+		astro.traverse(el => {
+			if (el.isMesh) el.castShadow = true
+			if (el.name == 'Object_11') astro.face = el
+			if (el.name == 'Object_8') astro.helm = el
+		})
 		mixer = new THREE.AnimationMixer(astro)
 		mixer.clipAction(gltf.animations[0]).play()
 		scene.add(astro)
@@ -76,21 +81,27 @@ function initCamera() {
 		}
 	})
 	.then(stream => {
-		document.querySelector('#screenshot svg:last-of-type').style.removeProperty('display')
 		document.querySelector('#screenshot svg:first-of-type').style.setProperty('display', 'none')
+		document.querySelector('#screenshot svg:last-of-type').style.removeProperty('display')
 		video = document.querySelector('video')
 		video.srcObject = stream
-		video.loop = true
 		video.play()
 		const texture = new THREE.VideoTexture(video)
+		texture.encoding = THREE.sRGBEncoding
+		astro.face.parent.transparent = true
+		astro.face.material.transparent = true
+		astro.face.material.opacity = 0.5
+		astro.face.material.needsUpdate = true
 		let sphere = new THREE.Mesh(
-			new THREE.SphereGeometry(1, 32, 16, 0, Math.PI, 0, Math.PI),
-			new THREE.MeshBasicMaterial({map: texture, opacity: 0.5, transparent: true})
+			new THREE.CircleGeometry(0.39),
+			new THREE.MeshBasicMaterial({map: texture})
 		)
-		sphere.scale.set(0.38, 0.38, 0.25)
-		sphere.position.set(0.04, 1.2, 0.9)
+		astro.face.depthWrite = false
+		astro.helm.depthWrite = false
+		sphere.position.set(0.05, 3.5, 0.83)
 		sphere.rotation.x = 0.35
 		sphere.rotation.y = -0.03
+		astro.helm.add(sphere)
 		astro.getObjectByName('mixamorig_Head_06').attach(sphere)
 		videoStarted = true
 	})
@@ -118,7 +129,7 @@ function initGame() {
 function resizeScene() {
 	camera.aspect = window.innerWidth / window.innerHeight
 	camera.updateProjectionMatrix()
-	//renderer.setPixelRatio(window.devicePixelRatio)
+	renderer.setPixelRatio(window.devicePixelRatio)
 	renderer.setSize(window.innerWidth, window.innerHeight)
 	document.querySelector('#picture').setAttribute('width', `${pictureSize()}px`)
 	document.querySelector('#picture').setAttribute('height', `${pictureSize()}px`)
@@ -163,7 +174,7 @@ function takePicture() {
 }
 
 function pictureSize() {
-	return Math.min(document.body.clientWidth, 512)
+	return Math.min(document.body.clientWidth, 512) * window.devicePixelRatio
 }
 
 window.onresize = () => resizeScene()
@@ -175,7 +186,7 @@ document.onreadystatechange = () => {
 }
 document.onclick = () => {
 	initCamera()
-	initAudio()
+	/* initAudio() */
 }
 document.onvisibilitychange = () => {
 	if (document.hidden) audio?.pause()
