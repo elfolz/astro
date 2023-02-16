@@ -16,11 +16,12 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth /window.innerHe
 const hemisphereLight = new THREE.HemisphereLight(0xddeeff, 0x000000, 0.25)
 const gltfLoader = new GLTFLoader()
 const scene = new THREE.Scene()
+const imageTextureLoader = new THREE.TextureLoader()
 const controls = new OrbitControls(camera, renderer.domElement)
+const fpsLimit = 1 / 60
+const reader = new FileReader()
 
-var fpsLimit = 1 / 60
-
-var progress = new Proxy({}, {
+const progress = new Proxy({}, {
 	set: function(target, key, value) {
 		target[key] = value
 		let values = Object.values(target).slice()
@@ -46,33 +47,53 @@ var clockDelta = 0
 var gameStarted = false
 var astro
 var mixer
+var photo
 var video
 var audio
+var photoMesh
+var videoMesh
+var photoTexture
+var videoTexture
 var videoStarted
 var audioStarted
+var cameraStream
 
-gltfLoader.load('/models/astro.glb',
-	gltf => {
-		astro = gltf.scene
-		astro.encoding = THREE.sRGBEncoding
-		astro.position.y -= 2.25
-		astro.traverse(el => {
-			if (el.isMesh) el.castShadow = true
-			if (el.name == 'Object_11') astro.face = el
-			if (el.name == 'Object_8') astro.helm = el
-		})
-		mixer = new THREE.AnimationMixer(astro)
-		mixer.clipAction(gltf.animations[0]).play()
-		scene.add(astro)
-	}, xhr => {
-		progress['astro'] = (xhr.loaded / xhr.total) * 100
-	}, error => {
-		console.error(error)
-	}
-)
+reader.onload = e => {
+	photo.src = e.target.result
+}
+
+function loadModel() {
+	gltfLoader.load('/models/astro.glb',
+		gltf => {
+			astro = gltf.scene
+			astro.encoding = THREE.sRGBEncoding
+			astro.position.y -= 2.25
+			astro.traverse(el => {
+				if (el.isMesh) el.castShadow = true
+				if (el.name == 'Object_11') astro.face = el
+				if (el.name == 'Object_8') astro.helm = el
+			})
+			mixer = new THREE.AnimationMixer(astro)
+			mixer.clipAction(gltf.animations[0]).play()
+			astro.face.parent.transparent = true
+			astro.face.material.transparent = true
+			astro.face.material.opacity = 0.5
+			astro.face.material.needsUpdate = true
+			astro.face.depthWrite = false
+			astro.helm.depthWrite = false
+			scene.add(astro)
+			if (photo) createPhotoTexture()
+			if (video) createVideoTexture()
+		}, xhr => {
+			progress['astro'] = (xhr.loaded / xhr.total) * 100
+		}, error => {
+			console.error(error)
+		}
+	)
+}
 
 function initCamera() {
-	if (videoStarted) return
+	if (!video || videoStarted) return
 	navigator.mediaDevices.getUserMedia({
 		audio: false,
 		video: {
@@ -81,30 +102,46 @@ function initCamera() {
 		}
 	})
 	.then(stream => {
-		document.querySelector('#screenshot svg:first-of-type').style.setProperty('display', 'none')
-		document.querySelector('#screenshot svg:last-of-type').style.removeProperty('display')
-		video = document.querySelector('video')
-		video.srcObject = stream
+		cameraStream = stream
+		video.srcObject = cameraStream
+		/* video.src = '/video.mp4' */
 		video.play()
-		const texture = new THREE.VideoTexture(video)
-		texture.encoding = THREE.sRGBEncoding
-		astro.face.parent.transparent = true
-		astro.face.material.transparent = true
-		astro.face.material.opacity = 0.5
-		astro.face.material.needsUpdate = true
-		let sphere = new THREE.Mesh(
-			new THREE.CircleGeometry(0.39),
-			new THREE.MeshBasicMaterial({map: texture})
-		)
-		astro.face.depthWrite = false
-		astro.helm.depthWrite = false
-		sphere.position.set(0.05, 3.5, 0.83)
-		sphere.rotation.x = 0.35
-		sphere.rotation.y = -0.03
-		astro.helm.add(sphere)
-		astro.getObjectByName('mixamorig_Head_06').attach(sphere)
+		photoMesh.material.transparent = true
+		videoMesh.material.transparent = false
 		videoStarted = true
 	})
+}
+
+function createPhotoTexture() {
+	let base64 = THREE.ImageUtils.getDataURL(photo)
+	photoTexture = imageTextureLoader.load(base64)
+	photoTexture.encoding = THREE.sRGBEncoding
+	photoMesh = new THREE.Mesh(
+		new THREE.CircleGeometry(),
+		new THREE.MeshBasicMaterial({map: photoTexture})
+	)
+	setMaskPosition(photoMesh)
+	astro.helm.add(photoMesh)
+	astro.getObjectByName('mixamorig_Head_06').attach(photoMesh)
+}
+
+function createVideoTexture() {
+	videoTexture = new THREE.VideoTexture(video)
+	videoTexture.encoding = THREE.sRGBEncoding
+	videoMesh = new THREE.Mesh(
+		new THREE.CircleGeometry(),
+		new THREE.MeshBasicMaterial({map: videoTexture, transparent: true})
+	)
+	setMaskPosition(videoMesh)
+	astro.helm.add(videoMesh)
+	astro.getObjectByName('mixamorig_Head_06').attach(videoMesh)
+}
+
+function setMaskPosition(object) {
+	object.scale.set(0.38, 0.38, 0.38)
+	object.position.set(0.06, 3.45, 0.83)
+	object.rotation.x = 0.35
+	object.rotation.y = -0.03
 }
 
 function initAudio() {
@@ -121,7 +158,7 @@ function initGame() {
 	gameStarted = true
 	document.body.classList.add('loaded')
 	document.body.removeChild(document.querySelector('figure'))
-	document.querySelector('#screenshot').style.removeProperty('display')
+	document.querySelector('footer').style.removeProperty('display')
 	resizeScene()
 	animate()
 }
@@ -131,8 +168,6 @@ function resizeScene() {
 	camera.updateProjectionMatrix()
 	renderer.setPixelRatio(window.devicePixelRatio)
 	renderer.setSize(window.innerWidth, window.innerHeight)
-	document.querySelector('#picture').setAttribute('width', `${pictureSize()}px`)
-	document.querySelector('#picture').setAttribute('height', `${pictureSize()}px`)
 	if (window.innerWidth < 390) camera.position.z = 3.5
 	else if (window.innerWidth <= 800) camera.position.z = 4
 	else camera.position.z = 4
@@ -150,8 +185,31 @@ function animate() {
 }
 
 function takePicture() {
-	if (!videoStarted) return
-	let canvas = document.querySelector('#picture')
+	let canvas = document.createElement('canvas')
+	canvas.width = video.videoWidth
+	canvas.height = video.videoHeight
+	let ctx = canvas.getContext('2d')
+	ctx.clearRect(0, 0, canvas.width, canvas.height)
+	ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+	photo.src = canvas.toDataURL('image/jpg')
+	refreshPhoto()
+	videoStarted = false
+}
+
+function refreshPhoto() {
+	photoTexture = imageTextureLoader.load(photo.src)
+	photoTexture.encoding = THREE.sRGBEncoding
+	photoMesh.material.map = photoTexture
+	photoMesh.material.needsUpdate = true
+	cameraStream?.getTracks()?.forEach(el => el.stop())
+	photoMesh.material.transparent = false
+	videoMesh.material.transparent = true
+}
+
+function download() {
+	let canvas = document.querySelector('#screenshot')
+	canvas.width = pictureSize()
+	canvas.height = pictureSize()
 	let ctx = canvas.getContext('2d')
 	ctx.clearRect(0, 0, canvas.width, canvas.height)
 	let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
@@ -165,8 +223,12 @@ function takePicture() {
 	let cut = aspect == 0.6 ? 16 : 8
 	let y = parseInt(renderer.domElement.height / cut)
 	ctx.drawImage(renderer.domElement, x, y, pictureSize() / scale, pictureSize() / scale, 0, 0, canvas.width, canvas.height)
+	canvas.classList.add('taken')
+	setTimeout(() => {
+		canvas.classList.remove('taken')
+	}, 1000)
 	let link = document.createElement('a')
-	link.download = 'Astro.png'
+	link.download = 'Astro.jpeg'
 	link.href = canvas.toDataURL('image/jpeg')
 	document.documentElement.appendChild(link)
 	link.click()
@@ -177,15 +239,37 @@ function pictureSize() {
 	return Math.min(document.body.clientWidth, 512) * window.devicePixelRatio
 }
 
+function toggleShutter() {
+	if (videoStarted) {
+		document.querySelector('button svg:first-of-type').classList.remove('hide')
+		document.querySelector('button svg:last-of-type').classList.add('hide')
+		takePicture()
+	} else {
+		document.querySelector('button svg:first-of-type').classList.add('hide')
+		document.querySelector('button svg:last-of-type').classList.remove('hide')
+		initCamera()
+	}
+}
+
+function loadFile(files) {
+	if (!files?.length) return
+	reader.readAsDataURL(files[0])
+}
+
 window.onresize = () => resizeScene()
 window.oncontextmenu = e => {e.preventDefault(); return false}
 
 document.onreadystatechange = () => {
 	if (document.readyState != 'complete') return
-	document.querySelector('#screenshot').onclick = () => takePicture()
+	video = document.querySelector('video')
+	photo = document.querySelector('#photo')
+	photo.onload = () => refreshPhoto()
+	document.querySelector('#camera').onclick = () => toggleShutter()
+	document.querySelector('#download').onclick = () => download()
+	document.querySelector('input[type=file]').onchange = e => loadFile(e.target.files)
+	loadModel()
 }
 document.onclick = () => {
-	initCamera()
 	/* initAudio() */
 }
 document.onvisibilitychange = () => {

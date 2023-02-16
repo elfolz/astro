@@ -35,29 +35,78 @@ body {
 body.loaded {
 	background: linear-gradient(#000, #000036, #4b0082, #000);
 }
-button {
+footer {
+	display: flex;
 	position: absolute;
 	left: 50%;
 	bottom: calc(env(safe-area-inset-bottom, 0) + 12px);
-	display: flex;
+	transform: translateX(-50%);
+}
+button, label {
+	width: 72px;
+	height: 72px;
+	display: inline-flex;
 	justify-content: center;
 	align-items: center;
 	border: none;
 	padding: 12px;
 	border-radius: 50%;
 	background-color: #121212;
-	transform: translateX(-50%);
 	aspect-ratio: 1/1;
 	cursor: pointer;
 	box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.5);
 }
+button svg {
+	position: absolute;
+	opacity: 1;
+	transform: scale(1);
+	transition: all 250ms ease-in-out;
+}
+button svg.hide {
+	opacity: 0;
+	transform: scale(0);
+}
+label {
+	margin: 0 24px;
+}
 video {
 	display: none;
-	width: 100px;
-	height: 100px;
 	object-fit: cover;
 }
-#picture {
+input {
+	display: none;
+}
+#photo {
+	display: none;
+}
+#screenshot {
 	position: absolute;
 	display: none;
+	opacity: 0;
+	transition: all 250ms ease-out;
+}
+#screenshot.taken {
+	display: block;
+	left: 50%;
+  top: 50%;
+	width: max(100vh, 100vh);
+	aspect-ratio: 1/1;
+	transform: translate(-50%, -50%);
+	z-index: 10;
+	opacity: 1;
+	animation: shot 500ms ease-out forwards;
+}
+#screenshot {
+	position: absolute;
+	display: none;
+}
+@keyframes shot {
+	from {
+		top: 50%;
+		transform: translate(-50%, -50%) scale(1);
+	}
+	to {
+		top: 100%;
+		transform: translate(-50%, -50%) scale(0);
+	}
 }
