@@ -46,8 +46,8 @@ scene.add(hemisphereLight)
 controls.screenSpacePanning = true
 controls.enableZoom = false
 dirLight1.position.set(0, 0, 1)
-dirLight2.position.set(5, 1, 1)
-dirLight3.position.set(-5, 1, 1)
+dirLight2.position.set(5, -1, 1)
+dirLight3.position.set(-5, -1, 1)
 scene.add(dirLight1)
 scene.add(dirLight2)
 scene.add(dirLight3)
@@ -78,7 +78,10 @@ function loadModel() {
 			astro.encoding = THREE.sRGBEncoding
 			astro.position.y -= 2.25
 			astro.traverse(el => {
-				if (el.isMesh) el.castShadow = true
+				if (el.isMesh) {
+					el.castShadow = true
+					el.receiveShadow = true
+				}
 				if (el.name == 'Object_11') astro.face = el
 				if (el.name == 'Object_8') astro.helm = el
 			})
@@ -90,6 +93,9 @@ function loadModel() {
 			astro.face.material.needsUpdate = true
 			astro.face.depthWrite = false
 			astro.helm.depthWrite = false
+			dirLight1.target = astro
+			dirLight2.target = astro
+			dirLight3.target = astro
 			scene.add(astro)
 			if (photo) createPhotoTexture()
 			if (video) createVideoTexture()
